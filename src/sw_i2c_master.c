@@ -9,7 +9,8 @@
  * 
  */
 
-#include "sw_i2c_master.h"
+#include "../include/sw_i2c_master.h"
+#include <assert.h>
 
 static void i2c_start(const I2CMaster* const device) {
 
@@ -83,6 +84,11 @@ void i2c_master_write_bus(const I2CMaster* const dev, const void* const data, co
 
 }
 
+I2CMaster* i2c_master_init(I2CMaster* const master, const I2CConfig* const config, const uint32_t freq) {
+
+    return (I2CMaster*)0;
+
+}
 
 uint16_t i2c_master_write(const I2CMaster* const dev, const uint8_t s_addr, const void* const data, const uint16_t size) {
 

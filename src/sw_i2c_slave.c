@@ -9,5 +9,5 @@
  * 
  */
 
-#include "sw_i2c_slave.h"
+#include "../include/sw_i2c_slave.h"
 

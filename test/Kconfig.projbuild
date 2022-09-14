@@ -1,0 +1,47 @@
+menu "Test Configuration"
+
+    orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
+    
+    config TEST_ULP_RISCV
+        bool "Test the RISC-V ULP Coprocessor"
+        default false
+        help
+            If we are going to test SW I2C on the RISC-V ULP Coprocessor
+
+    config GPIO_SCL
+        int "GPIO for SCL"
+        range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
+        default 18 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3
+        default 8 if IDF_TARGET_ESP32C2 || IDF_TARGET_ESP32H2
+        help
+            GPIO pin number to be used as SCL.
+
+    config GPIO_SDA
+        int "GPIO for SDA"
+        range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
+        default 19 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3
+        default 9 if IDF_TARGET_ESP32C2 || IDF_TARGET_ESP32H2
+        help
+            GPIO pin number to be used as SDA.
+
+    config I2C_FREQUENCY
+        int "Frequency for I2C"
+        range 0 50000
+        default 10000
+        help
+            The Clock Speed for the SW I2C implementation
+
+    config I2C_SLAVE_ADDRESS
+        int "Address of the I2C Slave To Test I2C With"
+        range 0 127
+        help
+            The Address of a Slave Connected to the SDA and SCL Pins to use for testing
+
+    config I2C_SLAVE_REG_ADDRESS
+        int "Address of A Register within that Slave that Can be Written to and Read From"
+        range 0 255
+        help
+            The Address of any valid register within the Slave testing device that can be read to and written to
+
+
+endmenu

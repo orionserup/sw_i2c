@@ -20,11 +20,20 @@
 typedef struct I2CMaster {
 
     I2CConfig config;   ///< The Hardware Configuration
-    uint32_t frequency; ///< The Master Clock Frequency
+    uint16_t frequency; ///< The Master Clock Frequency
+    bool started;       ///< If The Communication is Started
 
 } I2CMaster;
 
-I2CMaster* i2c_master_init(I2CMaster* const master, const I2CConfig* const config, const uint32_t freq);
+/**
+ * \brief 
+ * 
+ * \param master
+ * \param config
+ * \param freq
+ * \return I2CMaster* 
+ */
+I2CMaster* i2c_master_init(I2CMaster* const master, const I2CConfig* const config, const uint16_t freq);
 
 /**
  * \brief 
@@ -32,6 +41,17 @@ I2CMaster* i2c_master_init(I2CMaster* const master, const I2CConfig* const confi
  * \param master
  */
 void i2c_master_deinit(I2CMaster* const master);
+
+/**
+ * \brief Tries to Connect to a Slave with the given address
+ * 
+ * \param[in] dev: Device to Connect to a Slave From
+ * \param[in] s_addr: Address of the Slave To Connect To 
+ * \param[in] iswriting: If you are connecting to the slave to Write to it
+ * \return true: If the Slave Acknowledged the master 
+ * \return false: If the Slave didn't acknowledge the master or there is no slave
+ */
+bool i2c_master_connect_slave(const I2CMaster* const dev, const uint8_t s_addr, const bool iswriting);
 
 /**
  * \brief Writes to a slave on the i2c bus with address s_addr

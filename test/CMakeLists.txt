@@ -2,8 +2,8 @@
 if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
 
     idf_component_register( SRCS "esp32/test_driver.c" "esp32/test.c" "test_main.c"
-                            INCLUDE_DIRS "../../include ."
-                            REQUIRES unity cmock sw_i2c)
+                            INCLUDE_DIRS "../../include" "."
+                            REQUIRES unity cmock)
 
     if(IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3")
     if(CONFIG_TEST_ULP AND CONFIG_ESP32S2_ULP_COPROC_RISCV OR CONFIG_ESP32S3_ULP_COPROC_RISCV)

@@ -43,6 +43,18 @@ I2CMaster* i2c_master_init(I2CMaster* const master, const I2CConfig* const confi
 void i2c_master_deinit(I2CMaster* const master);
 
 /**
+ * \brief 
+ * 
+ */
+void i2c_start(I2CMaster* const master);
+
+/**
+ * \brief 
+ * 
+ */
+void i2c_stop(I2CMaster* const master);
+
+/**
  * \brief Tries to Connect to a Slave with the given address
  * 
  * \param[in] dev: Device to Connect to a Slave From
@@ -62,7 +74,7 @@ bool i2c_master_connect_slave(const I2CMaster* const dev, const uint8_t s_addr, 
  * \param[in] size: How many bytes to write to the slave
  * \return uint16_t: How many bytes were written
  */
-uint16_t i2c_master_write(const I2CMaster* const dev, const uint8_t s_addr, const void* const data, const uint16_t size);
+uint16_t i2c_master_write(I2CMaster* const dev, const uint8_t s_addr, const void* const data, const uint16_t size);
 
 /**
  * \brief Reads from a slave on the i2c bus
@@ -73,7 +85,7 @@ uint16_t i2c_master_write(const I2CMaster* const dev, const uint8_t s_addr, cons
  * \param[in] size: How many bytes to read
  * \return uint16_t: How many bytes were transferred at the end of the transaction
  */
-uint16_t i2c_master_read(const I2CMaster* const dev, const uint8_t s_addr, void* const data, const uint16_t size);
+uint16_t i2c_master_read(I2CMaster* const dev, const uint8_t s_addr, void* const data, const uint16_t size);
 
 /**
  * \brief Reads the value of a register from a slave
@@ -85,7 +97,7 @@ uint16_t i2c_master_read(const I2CMaster* const dev, const uint8_t s_addr, void*
  * \param[in] size: How many bytes to read
  * \return uint16_t: How many bytes were read
  */
-uint16_t i2c_master_read_reg(const I2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, void* const data, const uint16_t size);
+uint16_t i2c_master_read_reg(I2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, void* const data, const uint16_t size);
 
 /**
  * \brief Write to a register on the i2c slave 
@@ -97,6 +109,6 @@ uint16_t i2c_master_read_reg(const I2CMaster* const dev, const uint8_t s_addr, c
  * \param[in] size: The number of bytes to write
  * \return uint16_t: The Number of bytes written
  */
-uint16_t i2c_master_write_reg(const I2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, const void* const data, const uint16_t size);
+uint16_t i2c_master_write_reg(I2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, const void* const data, const uint16_t size);
 
 #endif

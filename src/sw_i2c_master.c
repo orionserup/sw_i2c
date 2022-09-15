@@ -13,18 +13,22 @@
 
 #include <string.h>
 
-static void i2c_start(I2CMaster* const device) {
+void i2c_start(I2CMaster* const device) {
 
     //assert(device);
+    device->config.delay(5);
     device->config.sda_write(0);
+    device->config.delay(5);
     device->started = true;
 
 }
 
-static void i2c_stop(I2CMaster* const device) {
+void i2c_stop(I2CMaster* const device) {
 
     //assert(device);
+    device->config.delay(5);
     device->config.sda_write(1);
+    device->config.delay(5);
     device->started = false;
 
 }

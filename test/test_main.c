@@ -12,6 +12,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <sw_i2c_master.h>
+
+#include "test_driver.h"
+
 #include "unity.h"
 
 TEST_CASE("I2C Can Connect To Slave", "[sw_i2c]") {

@@ -13,6 +13,8 @@
 #include <driver/gpio.h>
 #include <esp_rom_sys.h>
 
+#include <sw_i2c_master.h>
+
 #include "unity.h"
 
 #if (CONFIG_GPIO_SDA < 0) | (CONFIG_GPIO_SCL < 0)
@@ -37,11 +39,11 @@ void gpio_init() {
         .intr_type = GPIO_INTR_DISABLE,
         .mode = GPIO_MODE_INPUT_OUTPUT_OD
 
-    }
+    };
     gpio_config(&config);
 
     TEST_ASSERT(gpio_get_level(CONFIG_GPIO_SDA) == 1);
-    TEST_ASSERT(gpio_get_level(CONFIG_GPI_SCL) == 1);
+    TEST_ASSERT(gpio_get_level(CONFIG_GPIO_SCL) == 1);
 
 }
 
@@ -49,13 +51,13 @@ static bool read_sda() { return (bool)gpio_get_level(CONFIG_GPIO_SDA); }
 static bool read_scl() { return (bool)gpio_get_level(CONFIG_GPIO_SCL); }
 static void write_sda(const bool state) { TEST_ASSERT(gpio_set_level(CONFIG_GPIO_SDA, state) == ESP_OK); }
 static void write_scl(const bool state) { TEST_ASSERT(gpio_set_level(CONFIG_GPIO_SCL, state) == ESP_OK); }
-static void delay_us(const uint16_t us) { TEST_ASSERT(esp_rom_delay_us(us) == ESP_OK); }
+static void delay_us(const uint16_t us) {esp_rom_delay_us(us); }
 
 void i2c_init(I2CMaster* const master) {
 
     TEST_ASSERT(master != NULL);
 
-    static I2CCConfig config = {
+    static I2CConfig config = {
 
         .sda_write = write_sda,
         .scl_write = write_scl,
@@ -71,9 +73,7 @@ void i2c_init(I2CMaster* const master) {
     TEST_ASSERT(res->config.sda_read == read_sda);
     TEST_ASSERT(res->config.scl_write == write_scl);
     TEST_ASSERT(res->config.scl_read == read_scl);
-    TEST_ASSERT(res->freq == CONFIG_I2C_FREQUENCY);
-
-    return res;
+    TEST_ASSERT(res->frequency == CONFIG_I2C_FREQUENCY);
 
 }
 

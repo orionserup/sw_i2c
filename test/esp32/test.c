@@ -9,17 +9,33 @@
  * 
  */
 
-#include "../test_driver.h"
+#include "test_driver.h"
 
-#if CONFIG_TEST_ULP_RISCV
+#include "unity.h"
 
-static void init_ulp_riscv();
-static void gpio_init_ulp_riscv();
+// #if CONFIG_TEST_ULP_RISCV
 
-TEST_CASE("RISC-V Initialization", "[sw-i2c][ulp-riscv]") {
+// static void init_ulp_riscv();
+// static void gpio_init_ulp_riscv();
+
+// TEST_CASE("RISC-V Initialization", "[sw-i2c][ulp-riscv]") {
 
 
+
+// }
+
+// #endif
+
+int app_main(void) {
+
+    UNITY_BEGIN();  
+
+    unity_run_tests_by_tag("[sw_i2c]", false);
+
+    UNITY_END();
+
+    unity_run_menu();
+
+    return 1;
 
 }
-
-#endif

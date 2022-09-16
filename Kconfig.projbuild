@@ -1,34 +1,41 @@
 menu "Test Configuration"
     
+    config TEST_SW_I2C
+        bool "If we are going to run tests"
+        default true
+
     config TEST_ULP_RISCV
         int "Test the RISC-V ULP Coprocessor"
+        depends on TEST_SW_I2C
         default 0
         help
             If we are going to test SW I2C on the RISC-V ULP Coprocessor
 
     config GPIO_SCL
         int "GPIO for SCL"
-        default 18 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3
-        default 8 if IDF_TARGET_ESP32C2 || IDF_TARGET_ESP32H2
+        depends on TEST_SW_I2C
+        default -1
         help
             GPIO pin number to be used as SCL.
 
     config GPIO_SDA
         int "GPIO for SDA"
-        default 19 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3
-        default 9 if IDF_TARGET_ESP32C2 || IDF_TARGET_ESP32H2
+        depends on TEST_SW_I2C
+        default -1
         help
             GPIO pin number to be used as SDA.
 
     config I2C_FREQUENCY
         int "Frequency for I2C"
-        range 0 50000
+        depends on TEST_SW_I2C
+        range 8 50000
         default 10000
         help
             The Clock Speed for the SW I2C implementation
 
     config I2C_SLAVE_ADDRESS
         int "Address of the I2C Slave To Test I2C With"
+        depends on TEST_SW_I2C
         range 0 127
         default 0
         help
@@ -36,6 +43,7 @@ menu "Test Configuration"
 
     config I2C_SLAVE_REG_ADDRESS
         int "Address of A Register within that Slave that Can be Written to and Read From"
+        depends on TEST_SW_I2C
         range 0 255
         default 0
         help

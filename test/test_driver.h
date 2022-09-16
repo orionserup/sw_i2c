@@ -20,9 +20,15 @@ void gpio_init();
 /**
  * \brief 
  * 
+ */
+void gpio_deinit();
+
+/**
+ * \brief 
+ * 
  * \param master
  */
-void i2c_init(I2CMaster* const master);
+void i2c_init(SWI2CMaster* const master);
 
 /**
  * \brief Get the slave address object

@@ -42,22 +42,34 @@ void gpio_init() {
     };
     gpio_config(&config);
 
-    TEST_ASSERT(gpio_get_level(CONFIG_GPIO_SDA) == 1);
-    TEST_ASSERT(gpio_get_level(CONFIG_GPIO_SCL) == 1);
+    TEST_ASSERT_MESSAGE(gpio_set_level(CONFIG_GPIO_SDA, 1) == ESP_OK, "GPIO Couldn't Set the Level of the SDA");
+    TEST_ASSERT_MESSAGE(gpio_set_level(CONFIG_GPIO_SCL, 1) == ESP_OK, "GPIO Couldn't Set the Level of the SCL");
+
+    esp_rom_delay_us(1000);
+
+    TEST_ASSERT_MESSAGE(gpio_get_level(CONFIG_GPIO_SDA) == 1, "SDA Was Low When it Should Have been High");
+    TEST_ASSERT_MESSAGE(gpio_get_level(CONFIG_GPIO_SCL) == 1, "SCL Was Low When it Should Have been High");
+
+}
+
+void gpio_deinit() {
+
+    gpio_reset_pin(CONFIG_GPIO_SDA);
+    gpio_reset_pin(CONFIG_GPIO_SCL);
 
 }
 
 static bool read_sda() { return (bool)gpio_get_level(CONFIG_GPIO_SDA); }
 static bool read_scl() { return (bool)gpio_get_level(CONFIG_GPIO_SCL); }
-static void write_sda(const bool state) { TEST_ASSERT(gpio_set_level(CONFIG_GPIO_SDA, state) == ESP_OK); }
-static void write_scl(const bool state) { TEST_ASSERT(gpio_set_level(CONFIG_GPIO_SCL, state) == ESP_OK); }
-static void delay_us(const uint16_t us) {esp_rom_delay_us(us); }
+static void write_sda(const bool state) { gpio_set_level(CONFIG_GPIO_SDA, state); }
+static void write_scl(const bool state) { gpio_set_level(CONFIG_GPIO_SCL, state); }
+static void delay_us(const uint16_t us) { esp_rom_delay_us(us); }
 
-void i2c_init(I2CMaster* const master) {
+void i2c_init(SWI2CMaster* const master) {
 
     TEST_ASSERT(master != NULL);
 
-    static I2CConfig config = {
+    const static SWI2CConfig config = {
 
         .sda_write = write_sda,
         .scl_write = write_scl,
@@ -67,13 +79,13 @@ void i2c_init(I2CMaster* const master) {
         .delay = delay_us
     };
 
-    I2CMaster* res = i2c_master_init(master, &config, CONFIG_I2C_FREQUENCY);
-    TEST_ASSERT(res != NULL);
-    TEST_ASSERT(res->config.sda_write == write_sda);
-    TEST_ASSERT(res->config.sda_read == read_sda);
-    TEST_ASSERT(res->config.scl_write == write_scl);
-    TEST_ASSERT(res->config.scl_read == read_scl);
-    TEST_ASSERT(res->frequency == CONFIG_I2C_FREQUENCY);
+    SWI2CMaster* res = sw_i2c_master_init(master, &config, CONFIG_I2C_FREQUENCY);
+    TEST_ASSERT_MESSAGE(res != NULL, "I2C Master did Not COnfigure Correctly");
+    TEST_ASSERT_MESSAGE(res->config.sda_write == write_sda, "SDA Writing Function Isn't Correct");
+    TEST_ASSERT_MESSAGE(res->config.sda_read == read_sda, "SDA Reading Function isn't Correct");
+    TEST_ASSERT_MESSAGE(res->config.scl_write == write_scl, "SCL Writing Function Doesn't Line Up");
+    TEST_ASSERT_MESSAGE(res->config.scl_read == read_scl, "SCL Reading Function Doesn't Line Up");
+    TEST_ASSERT_MESSAGE(res->frequency == CONFIG_I2C_FREQUENCY, "I2C Frequency Wasn't the Same as Assigned");
 
 }
 

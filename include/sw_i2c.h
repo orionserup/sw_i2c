@@ -20,7 +20,7 @@
 #define I2C_NACK    1
 
 /// Everything needed to bit-bang i2c
-typedef struct I2CCONFIG {
+typedef struct SWI2CCONFIG {
 
     void (*sda_write)(const bool state);  ///< The Function for the SDA GPIO writing
     void (*scl_write)(const bool state);  ///< The Function for the SCL GPIO writing, only needed if a master
@@ -30,7 +30,7 @@ typedef struct I2CCONFIG {
 
     void (*delay)(const uint16_t useconds);    ///< A delay function for proper timing
 
-} I2CConfig;
+} SWI2CConfig;
 
 
 #endif

@@ -2,7 +2,7 @@
 if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
 
     idf_component_register( SRCS "esp32/test_driver.c" "esp32/test.c" "test_main.c"
-                            INCLUDE_DIRS "../../include" "."
+                            INCLUDE_DIRS "../include" "."
                             REQUIRES unity)
 
     if(IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3")

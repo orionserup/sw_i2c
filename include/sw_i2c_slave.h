@@ -14,7 +14,7 @@
 /// @brief Device Structure to Represent A Designated Software I2C device
 typedef struct I2CSlave {
 
-    I2CConfig config;   ///< The Backend Hardware Configuration and Timing
+    SWI2CConfig config;   ///< The Backend Hardware Configuration and Timing
     uint8_t address;    ///< The Slave Address of the Device
 
 } I2CSlave;

@@ -18,111 +18,171 @@
 
 #include "unity.h"
 
-TEST_CASE("I2C Can Connect To Slave", "[sw_i2c]") {
+TEST_CASE("GPIO Works Properly", "[sw_i2c]") 
+{
+
+    gpio_init();
+    SWI2CMaster master;
+    i2c_init(&master);
+
+    master.config.scl_write(1);
+    master.config.delay(5);
+    TEST_ASSERT_EQUAL_MESSAGE(1, master.config.scl_read(), "Clock Isn't High");
+    master.config.delay(5);
+    master.config.scl_write(0);
+    master.config.delay(5);
+    TEST_ASSERT_EQUAL_MESSAGE(0, master.config.scl_read(), "Clock Isn't Low");
+    master.config.delay(5);
+
+    master.config.sda_write(1);
+    master.config.delay(5);
+    TEST_ASSERT_EQUAL_MESSAGE(1, master.config.sda_read(), "Data Isn't High");
+    master.config.delay(5);
+    master.config.sda_write(0);
+    master.config.delay(5);
+    TEST_ASSERT_EQUAL_MESSAGE(0, master.config.sda_read(), "Data Line Isnt Low");
+
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
+
+}
+
+TEST_CASE("I2C Can Start and Stop", "[sw_i2c]") 
+{
+
+    gpio_init();
+    SWI2CMaster master;
+    i2c_init(&master);
+
+    sw_i2c_start(&master);
+    TEST_ASSERT_EQUAL_MESSAGE(0, master.config.sda_read(), "Start Didn't Pull the Data Line High");
+
+    sw_i2c_stop(&master);
+    TEST_ASSERT_EQUAL_MESSAGE(1, master.config.sda_read(), "Stop Didn't Pull the Data Line Low");
+
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
+
+}
+
+TEST_CASE("I2C Can Connect To Slave", "[sw_i2c]") 
+{
 
     gpio_init();
 
-    I2CMaster master;
+    SWI2CMaster master;
     i2c_init(&master);
 
     const uint8_t s_addr = slave_address_get();
-    i2c_start(&master);
-    TEST_ASSERT(i2c_master_connect_slave(&master, s_addr, true) == true);
-    i2c_stop(&master);
+    sw_i2c_start(&master);
 
-    i2c_master_deinit(&master);
+    TEST_ASSERT_MESSAGE(sw_i2c_master_connect_slave(&master, s_addr, true), "Could Not Connect to Slave");
+    
+    sw_i2c_stop(&master);
 
-}
-
-TEST_CASE("I2C Can Start and Stop", "[sw_i2c]") {
-
-    gpio_init();
-    I2CMaster master;
-    i2c_init(&master);
-
-    i2c_start(&master);
-    TEST_ASSERT(master.config.sda_read() == 0);
-
-    i2c_stop(&master);
-    TEST_ASSERT(master.config.sda_read() == 1);
-
-    i2c_master_deinit(&master);
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
 
 }
 
-TEST_CASE("I2C Can Write A Byte", "[sw_i2c]") {
+TEST_CASE("I2C Can Write A Byte", "[sw_i2c]") 
+{
 
     gpio_init();
-    I2CMaster master;
+    SWI2CMaster master;
     i2c_init(&master);
 
     const uint8_t s_addr = slave_address_get();
-    uint8_t byte = 0xAA;
-    TEST_ASSERT(i2c_master_write(&master, s_addr, &byte, 1) == 1);
+    uint8_t byte = 0x55;
+    TEST_ASSERT_EQUAL_MESSAGE(1, sw_i2c_master_write(&master, s_addr, &byte, 1), "Couldn't Write a Byte to the Slave, Likely Bad ACK");
 
-    i2c_master_deinit(&master);
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
 
 }
 
-TEST_CASE("I2C Can Read A Byte", "[sw_i2c]") {
+// TEST_CASE("I2C Can Do a Long Continuous Write", "[sw_i2c]") 
+// {
+
+//     gpio_init();
+//     SWI2CMaster master;
+//     i2c_init(&master);
+
+//     const uint8_t s_addr = slave_address_get();
+//     static uint8_t byte[255] = {0};
+//     TEST_ASSERT_EQUAL_MESSAGE(255, sw_i2c_master_write(&master, s_addr, &byte, 255), "Couldn't Send Long Byte String, Probably Bad ACK");
+
+//     sw_i2c_master_deinit(&master);
+//     gpio_deinit();
+
+// }
+
+TEST_CASE("I2C Can Read A Byte", "[sw_i2c]") 
+{
 
     gpio_init();
-    I2CMaster master;
+    SWI2CMaster master;
     i2c_init(&master);
 
     const uint8_t s_addr = slave_address_get();
     uint8_t byte;
-    TEST_ASSERT(i2c_master_read(&master, s_addr, &byte, 1) == 1);
+    TEST_ASSERT_EQUAL_MESSAGE(1, sw_i2c_master_read(&master, s_addr, &byte, 1), "Couldn't Read a Byte from the Slave");
 
-    i2c_master_deinit(&master);
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
 
 }
 
-TEST_CASE("I2C Can Write To A Register", "[sw_i2c]") {
+TEST_CASE("I2C Can Write To A Register", "[sw_i2c]") 
+{
 
     gpio_init();
-    I2CMaster master;
+    SWI2CMaster master;
     i2c_init(&master);
 
     const uint8_t s_addr = slave_address_get();
     const uint8_t r_addr = slave_reg_address_get();
-    uint8_t byte = 0xCC;
-    TEST_ASSERT(i2c_master_write_reg(&master, s_addr, r_addr, &byte, 1) == 1);
+    uint8_t byte = 0x55;
+    TEST_ASSERT_EQUAL_MESSAGE(1, sw_i2c_master_write_reg(&master, s_addr, r_addr, &byte, 1), "Couldn't Write Byte to Device Register");
 
-    i2c_master_deinit(&master);
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
 
 }
 
 TEST_CASE("I2C Can Read From a Register", "[sw_i2c]") {
 
     gpio_init();
-    I2CMaster master;
+    SWI2CMaster master;
     i2c_init(&master);
 
     const uint8_t s_addr = slave_address_get();
     const uint8_t r_addr = slave_reg_address_get();
     uint8_t byte;
-    TEST_ASSERT(i2c_master_read_reg(&master, s_addr, r_addr, &byte, 1) == 1);
+    TEST_ASSERT_EQUAL_MESSAGE(1, sw_i2c_master_read_reg(&master, s_addr, r_addr, &byte, 1), "Couldn't Read a Byte From the Device Register");
 
-    i2c_master_deinit(&master);
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
 
 }
 
-TEST_CASE("I2C Can Read And Write To a Register", "[sw_i2c]") {
+TEST_CASE("I2C Can Read And Write To a Register", "[sw_i2c]") 
+{
 
     gpio_init();
-    I2CMaster master;
+    SWI2CMaster master;
     i2c_init(&master);
 
     const uint8_t s_addr = slave_address_get();
     const uint8_t r_addr = slave_reg_address_get();
-    uint8_t byte_to_write = 0xAA;
-    uint8_t byte_to_read = 0xCC;
+    uint16_t bytes_to_write = 0x5555;
+    uint16_t bytes_to_read = 0xAAAA;
 
-    TEST_ASSERT(i2c_master_write_reg(&master, s_addr, r_addr, &byte_to_write, 1) == 1);
-    TEST_ASSERT(i2c_master_read_reg(&master, s_addr, r_addr, &byte_to_read, 1) == 1);
-    TEST_ASSERT(byte_to_read == byte_to_write);
+    TEST_ASSERT_EQUAL_MESSAGE(2, sw_i2c_master_write_reg(&master, s_addr, r_addr, &bytes_to_write, 2), "Coudn't Write 2 bytes to device register");
+    TEST_ASSERT_EQUAL_MESSAGE(2, sw_i2c_master_read_reg(&master, s_addr, r_addr, &bytes_to_read, 2), "Couldn't Read 2 Bytes from the device register");
+    TEST_ASSERT_EQUAL_MESSAGE(bytes_to_write, bytes_to_read, "The Bytes Written to the Device Register Don't Match the Bytes Read from the Register");
 
-    i2c_master_deinit(&master);
+    sw_i2c_master_deinit(&master);
+    gpio_deinit();
 
 }

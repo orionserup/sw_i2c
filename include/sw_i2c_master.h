@@ -17,13 +17,13 @@
 /// \todo add clock stretching compatibility
 
 /// @brief Master Structure, represents an I2C bus master
-typedef struct I2CMaster {
+typedef struct SWI2CMaster {
 
-    I2CConfig config;   ///< The Hardware Configuration
+    SWI2CConfig config;   ///< The Hardware Configuration
     uint16_t frequency; ///< The Master Clock Frequency
     bool started;       ///< If The Communication is Started
 
-} I2CMaster;
+} SWI2CMaster;
 
 /**
  * \brief 
@@ -33,26 +33,26 @@ typedef struct I2CMaster {
  * \param freq
  * \return I2CMaster* 
  */
-I2CMaster* i2c_master_init(I2CMaster* const master, const I2CConfig* const config, const uint16_t freq);
+SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* const config, const uint16_t freq);
 
 /**
  * \brief 
  * 
  * \param master
  */
-void i2c_master_deinit(I2CMaster* const master);
+void sw_i2c_master_deinit(SWI2CMaster* const master);
 
 /**
  * \brief 
  * 
  */
-void i2c_start(I2CMaster* const master);
+void sw_i2c_start(SWI2CMaster* const master);
 
 /**
  * \brief 
  * 
  */
-void i2c_stop(I2CMaster* const master);
+void sw_i2c_stop(SWI2CMaster* const master);
 
 /**
  * \brief Tries to Connect to a Slave with the given address
@@ -63,10 +63,10 @@ void i2c_stop(I2CMaster* const master);
  * \return true: If the Slave Acknowledged the master 
  * \return false: If the Slave didn't acknowledge the master or there is no slave
  */
-bool i2c_master_connect_slave(const I2CMaster* const dev, const uint8_t s_addr, const bool iswriting);
+bool sw_i2c_master_connect_slave(const SWI2CMaster* const dev, const uint8_t s_addr, const bool iswriting);
 
 /**
- * \brief Writes to a slave on the i2c bus with address s_addr
+ * \brief Writes to a slave on the sw_i2c bus with address s_addr
  * 
  * \param[in] dev: Software I2C Device to Write/Read from
  * \param[in] s_addr: Slave to Write to
@@ -74,10 +74,10 @@ bool i2c_master_connect_slave(const I2CMaster* const dev, const uint8_t s_addr, 
  * \param[in] size: How many bytes to write to the slave
  * \return uint16_t: How many bytes were written
  */
-uint16_t i2c_master_write(I2CMaster* const dev, const uint8_t s_addr, const void* const data, const uint16_t size);
+uint16_t sw_i2c_master_write(SWI2CMaster* const dev, const uint8_t s_addr, const void* const data, const uint16_t size);
 
 /**
- * \brief Reads from a slave on the i2c bus
+ * \brief Reads from a slave on the sw_i2c bus
  * 
  * \param[in] dev: Software I2C Device to Write/Read with
  * \param[in] s_addr: The address of the slave to write to
@@ -85,7 +85,7 @@ uint16_t i2c_master_write(I2CMaster* const dev, const uint8_t s_addr, const void
  * \param[in] size: How many bytes to read
  * \return uint16_t: How many bytes were transferred at the end of the transaction
  */
-uint16_t i2c_master_read(I2CMaster* const dev, const uint8_t s_addr, void* const data, const uint16_t size);
+uint16_t sw_i2c_master_read(SWI2CMaster* const dev, const uint8_t s_addr, void* const data, const uint16_t size);
 
 /**
  * \brief Reads the value of a register from a slave
@@ -97,10 +97,10 @@ uint16_t i2c_master_read(I2CMaster* const dev, const uint8_t s_addr, void* const
  * \param[in] size: How many bytes to read
  * \return uint16_t: How many bytes were read
  */
-uint16_t i2c_master_read_reg(I2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, void* const data, const uint16_t size);
+uint16_t sw_i2c_master_read_reg(SWI2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, void* const data, const uint16_t size);
 
 /**
- * \brief Write to a register on the i2c slave 
+ * \brief Write to a register on the sw_i2c slave 
  * 
  * \param[in] dev: I2C Device Created in software to write/read from
  * \param[in] s_addr: The address of the slave to write to
@@ -109,6 +109,6 @@ uint16_t i2c_master_read_reg(I2CMaster* const dev, const uint8_t s_addr, const u
  * \param[in] size: The number of bytes to write
  * \return uint16_t: The Number of bytes written
  */
-uint16_t i2c_master_write_reg(I2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, const void* const data, const uint16_t size);
+uint16_t sw_i2c_master_write_reg(SWI2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, const void* const data, const uint16_t size);
 
 #endif

@@ -28,7 +28,7 @@ menu "Test Configuration"
     config I2C_FREQUENCY
         int "Frequency for I2C"
         depends on TEST_SW_I2C
-        range 8 50000
+        range 8 500000
         default 10000
         help
             The Clock Speed for the SW I2C implementation

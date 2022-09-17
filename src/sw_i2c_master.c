@@ -14,111 +14,114 @@
 #include <string.h>
 
 void sw_i2c_start(SWI2CMaster* const device) {
-
-    if(device == NULL)
-        return;
     
     device->started = true;   
     device->config.sda_write(1);
-    device->config.delay(5);
     device->config.sda_write(0);
-    device->config.delay(5);
+    device->config.delay(20);
+    device->config.scl_write(0);
+    device->config.delay(20);
+
+}
+
+void sw_i2c_restart(SWI2CMaster* const device) {
+
+    device->config.sda_write(1);
+    device->config.delay(20);
+    device->config.scl_write(1);
+    device->config.delay(20);
+
+    sw_i2c_start(device);
 }
 
 void sw_i2c_stop(SWI2CMaster* const device) {
 
-    if(device == NULL)
-        return;
-
     device->started = false;
+    device->config.delay(10);
     device->config.sda_write(0);
-    device->config.delay(5);
     device->config.sda_write(1);
-    device->config.delay(5);
+    device->config.delay(10);
     
 }
 
-static void sw_i2c_master_write_bit(const SWI2CMaster* const dev, const bool bit) {
-
-    //assert(dev);
-
-    uint16_t period = (1000000.0f / (float)dev->frequency);
+void sw_i2c_master_write_bit(const SWI2CMaster* const dev, const bool bit) {
     
-    while(dev->config.scl_read() == 0);
-    dev->config.scl_write(0);
-    dev->config.delay(1);
     dev->config.sda_write(bit);
-    dev->config.delay(period / 2);
+    dev->config.delay(dev->period_us / 2);
     dev->config.scl_write(1);   
-    dev->config.delay(period / 2);
+    while(dev->config.scl_read() == 0);
+    dev->config.delay(dev->period_us / 2);
+    dev->config.scl_write(0);
 
 }
 
-static bool sw_i2c_master_read_bit(const SWI2CMaster* const dev) {
+bool sw_i2c_master_read_bit(const SWI2CMaster* const dev) {
 
-    //assert(dev);
-
-    const uint16_t period = (1000000.0f / (float)dev->frequency);
-
-    while(dev->config.scl_read() == 0);
-    dev->config.scl_write(0);    
-    dev->config.delay(period / 2);
+    dev->config.scl_write(0);
+    dev->config.sda_write(1); // let the slave drive the data 
+    dev->config.delay(dev->period_us / 2);
     dev->config.scl_write(1);    
-    dev->config.delay(period / 4);
+    while(dev->config.scl_read() == 0);
+    dev->config.delay(dev->period_us / 2);
     bool val = dev->config.sda_read();
-    dev->config.delay(period / 4);
-
     return val;
 
 }
 
-static bool sw_i2c_master_ack_check(const SWI2CMaster* const master) {
+bool sw_i2c_master_ack_check(const SWI2CMaster* const master) {
 
-    const uint16_t period = (1000000.0f / (float)master->frequency);
-
-    master->config.scl_write(0);     
-    master->config.delay(period / 4); 
-    master->config.sda_write(1);
-    master->config.delay(period / 4);
-    master->config.scl_write(1);
-    master->config.delay(period / 4);
-    bool acked = master->config.sda_read() == I2C_ACK;
-    master->config.delay(period / 4);
-
-    return acked;
+    return sw_i2c_master_read_bit(master) == I2C_ACK;
 
 }
 
-static void sw_i2c_master_write_byte(const SWI2CMaster* const dev, const uint8_t data) {
+bool sw_i2c_master_write_byte(const SWI2CMaster* const dev, const uint8_t data) {
 
-    //assert(dev);
+    for(uint8_t j = (1 << 7); j != 0; j >>= 1)
+        sw_i2c_master_write_bit(dev, (data & j) != 0);
 
-    for(uint8_t j = 0x80; j != 0; j >>= 1)
-        sw_i2c_master_write_bit(dev, data & j);
+    if(!sw_i2c_master_ack_check(dev))
+        return 0;
+
+    return 1;
 
 }
 
-static uint8_t sw_i2c_master_read_byte(const SWI2CMaster* const dev) {
-
-    //assert(dev);
+uint8_t sw_i2c_master_read_byte(const SWI2CMaster* const dev, const bool ack) {
 
     uint8_t data = 0;
     for(uint8_t i = 7; i != UINT8_MAX; i--)
         data |= sw_i2c_master_read_bit(dev) << i;
 
+    sw_i2c_master_write_bit(dev, ack);
+    if(dev->config.sda_read() != ack)
+        return 0xff;
+
     return data;
-}
-
-void sw_i2c_master_write_bus(const SWI2CMaster* const dev, const void* const data, const uint16_t size) {
-
-    //assert(dev && data && size);
-
-    for(uint16_t i = 0; i != size; i++) 
-        sw_i2c_master_write_byte(dev, ((uint8_t*)data)[i]);
 
 }
 
-SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* const config, const uint16_t freq) {
+uint16_t sw_i2c_master_write_bus(const SWI2CMaster* const dev, const void* const data, const uint16_t size) {
+
+    uint16_t i;
+    for(i = 0; i != size; i++) {
+        if(!sw_i2c_master_write_byte(dev, ((uint8_t*)data)[i]))
+            break;
+    }
+    return i;
+}
+
+uint16_t sw_i2c_master_read_bus(const SWI2CMaster* const dev, void* const data, const uint16_t size) {
+
+    uint16_t i = 0;
+    for(; i != size; i++) {
+        bool ack = (i == size - 1)? I2C_NACK: I2C_ACK;
+        ((uint8_t*)data)[i] = sw_i2c_master_read_byte(dev, ack);
+    }
+    return i;
+}
+
+
+SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* const config, const uint32_t freq) {
 
     if(config->delay == NULL)
         return NULL;
@@ -130,7 +133,9 @@ SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* co
         return NULL;
 
     memcpy(&master->config, config, sizeof(SWI2CConfig));
-    master->frequency = freq;
+    master->frequency = freq;    
+    float period = 1.0f / (float)freq;
+    master->period_us = (uint16_t)(100000.0f * period); 
     master->started = false;
 
     return master;
@@ -154,11 +159,7 @@ bool sw_i2c_master_connect_slave(const SWI2CMaster* const dev, const uint8_t s_a
     if(dev == NULL || !dev->started)
         return false;
 
-    sw_i2c_master_write_byte(dev, (s_addr << 1) | !iswriting);
-    if(!sw_i2c_master_ack_check(dev))
-        return false;
-
-    return true;
+    return sw_i2c_master_write_byte(dev, (s_addr << 1) | (iswriting? 0: 1));
     
 }
 
@@ -169,32 +170,22 @@ uint16_t sw_i2c_master_write(SWI2CMaster* const dev, const uint8_t s_addr, const
     if(!sw_i2c_master_connect_slave(dev, s_addr, true))
         return 0;
 
-    uint8_t i = 0;
-    for(; i != size; i++) {
-        sw_i2c_master_write_byte(dev, ((uint8_t*)data)[i]);
-        if(!sw_i2c_master_ack_check(dev)) // if the slave didn't acknowledge then stop sending the data
-            break;
-    }
+    uint16_t val = sw_i2c_master_write_bus(dev, data, size);
     
     sw_i2c_stop(dev);
 
-    return i; // return how many bytes were sent
+    return val; // return how many bytes were sent
 
 }
 
 uint16_t sw_i2c_master_read(SWI2CMaster* const dev, const uint8_t s_addr, void* const data, const uint16_t size) {
 
-    //assert(dev && data && size);
-
     sw_i2c_start(dev);
+
     if(!sw_i2c_master_connect_slave(dev, s_addr, false))
         return 0;
 
-    uint16_t i = 0;
-    for(; i != size; i++) {
-        ((uint8_t*)data)[i] = sw_i2c_master_read_byte(dev);
-        sw_i2c_master_write_bit(dev, (i == size - 1)? I2C_NACK: I2C_ACK); // if its the last bit we send a NACK to the slave otherwise ack a byte
-    }
+    uint16_t i = sw_i2c_master_read_bus(dev, data, size);
 
     sw_i2c_stop(dev);
     
@@ -204,40 +195,36 @@ uint16_t sw_i2c_master_read(SWI2CMaster* const dev, const uint8_t s_addr, void* 
 
 uint16_t sw_i2c_master_read_reg(SWI2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, void* const data, const uint16_t size) {
 
-    //assert(dev && data && size);
-
     sw_i2c_start(dev);
     if(!sw_i2c_master_connect_slave(dev, s_addr, true))
         return 0;
 
-    sw_i2c_master_write_byte(dev, reg_addr);
-    if(!sw_i2c_master_ack_check(dev))
+    if(!sw_i2c_master_write_byte(dev, reg_addr))
         return 0;
 
-    dev->config.delay(100);
+    sw_i2c_restart(dev);
 
-    return sw_i2c_master_read(dev, s_addr, data, size);
+    if(!sw_i2c_master_connect_slave(dev, s_addr, false))
+        return 0;
+
+    uint16_t i = sw_i2c_master_read_bus(dev, data, size);
+    
+    sw_i2c_stop(dev);
+
+    return i;
 
 }
 
 uint16_t sw_i2c_master_write_reg(SWI2CMaster* const dev, const uint8_t s_addr, const uint8_t reg_addr, const void* const data, const uint16_t size) {
 
-    //assert(dev && data && size);
-
     sw_i2c_start(dev);
     if(!sw_i2c_master_connect_slave(dev, s_addr, true))
         return 0;
 
-    sw_i2c_master_write_byte(dev, reg_addr);
-    if(!sw_i2c_master_ack_check(dev))
+    if(!sw_i2c_master_write_byte(dev, reg_addr))
         return 0;
     
-    uint16_t i = 0;
-    for(; i != size; i++) {
-        sw_i2c_master_write_byte(dev, ((uint8_t*)data)[i]);
-        if(!sw_i2c_master_ack_check(dev))
-            break;
-    }
+    uint16_t i = sw_i2c_master_write_bus(dev, data, size);
 
     sw_i2c_stop(dev);
 

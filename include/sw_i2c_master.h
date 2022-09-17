@@ -19,9 +19,10 @@
 /// @brief Master Structure, represents an I2C bus master
 typedef struct SWI2CMaster {
 
-    SWI2CConfig config;   ///< The Hardware Configuration
-    uint16_t frequency; ///< The Master Clock Frequency
-    bool started;       ///< If The Communication is Started
+    SWI2CConfig config;     ///< The Hardware Configuration
+    uint32_t frequency;     ///< The Master Clock Frequency
+    uint16_t period_us;     ///< The Period of the Clock in Microseconds
+    bool started;           ///< If The Communication is Started
 
 } SWI2CMaster;
 
@@ -33,7 +34,7 @@ typedef struct SWI2CMaster {
  * \param freq
  * \return I2CMaster* 
  */
-SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* const config, const uint16_t freq);
+SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* const config, const uint32_t freq);
 
 /**
  * \brief 
@@ -53,6 +54,22 @@ void sw_i2c_start(SWI2CMaster* const master);
  * 
  */
 void sw_i2c_stop(SWI2CMaster* const master);
+
+void sw_i2c_restart(SWI2CMaster* const device);
+
+void sw_i2c_master_write_bit(const SWI2CMaster* const dev, const bool bit);
+
+bool sw_i2c_master_read_bit(const SWI2CMaster* const dev);
+
+bool sw_i2c_master_ack_check(const SWI2CMaster* const master);
+
+bool sw_i2c_master_write_byte(const SWI2CMaster* const dev, const uint8_t data);
+
+uint8_t sw_i2c_master_read_byte(const SWI2CMaster* const dev, const bool ack);
+
+uint16_t sw_i2c_master_write_bus(const SWI2CMaster* const dev, const void* const data, const uint16_t size);
+
+uint16_t sw_i2c_master_read_bus(const SWI2CMaster* const dev, void* const data, const uint16_t size);
 
 /**
  * \brief Tries to Connect to a Slave with the given address

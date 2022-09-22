@@ -39,7 +39,6 @@ static void delay_us(const uint16_t us) { ulp_riscv_delay_cycles(us * ULP_RISCV_
 static bool inited = false;
 static I2CMaster master;
 
-
 int main() {
 
     if(!inited) {

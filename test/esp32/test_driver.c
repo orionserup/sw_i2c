@@ -11,58 +11,72 @@
 
 #include <sdkconfig.h>
 #include <driver/gpio.h>
+#include <driver/rtc_io.h>
 #include <esp_rom_sys.h>
+#include <esp_err.h>
 
 #include <sw_i2c_master.h>
 
 #include "unity.h"
 
 #if (CONFIG_GPIO_SDA < 0) | (CONFIG_GPIO_SCL < 0)
-#error "GPIO for SDA and SCL Need to to Be Legitimate"
+    #error "GPIO for SDA and SCL Need to to Be Legitimate"
 #endif
 
 #if (CONFIG_TEST_ULP_RISCV) & ((CONFIG_GPIO_SCL > 21) | (CONFIG_GPIO_SDA > 21))
-#error "GPIO for SCL and SDA Need to be between 0 and 21 in order for ULP-RISCV Testing to Work"
+    #error "GPIO for SCL and SDA Need to be between 0 and 21 in order for ULP-RISCV Testing to Work"
 #endif
 
 #if (CONFIG_I2C_FREQUENCY <= 8) | !defined(CONFIG_I2C_SLAVE_ADDRESS) | !defined(CONFIG_I2C_SLAVE_REG_ADDRESS)
-#error "We need the Frequency to Be in the Range [8, 50000] and the Slave and Register Address to Be Legit"
+    #error "We need the Frequency to Be in the Range [8, 50000] and the Slave and Register Address to Be Legit"
 #endif
 
 void gpio_init() {
+    
+    ESP_ERROR_CHECK(rtc_gpio_init(CONFIG_GPIO_SCL));    
+    ESP_ERROR_CHECK(rtc_gpio_set_drive_capability(CONFIG_GPIO_SCL, GPIO_DRIVE_CAP_3));
+    ESP_ERROR_CHECK(rtc_gpio_pullup_en(CONFIG_GPIO_SCL));
+    ESP_ERROR_CHECK(rtc_gpio_pulldown_dis(CONFIG_GPIO_SCL)); 
+    ESP_ERROR_CHECK(rtc_gpio_set_direction(CONFIG_GPIO_SCL, RTC_GPIO_MODE_INPUT_OUTPUT_OD));
+    ESP_ERROR_CHECK(rtc_gpio_set_level(CONFIG_GPIO_SCL, 0));  
+    
+    esp_rom_delay_us(100);
 
-    const static gpio_config_t config = {
+    ESP_ERROR_CHECK(rtc_gpio_init(CONFIG_GPIO_SDA));    
+    ESP_ERROR_CHECK(rtc_gpio_set_drive_capability(CONFIG_GPIO_SDA, GPIO_DRIVE_CAP_3));
+    ESP_ERROR_CHECK(rtc_gpio_pullup_en(CONFIG_GPIO_SDA));
+    ESP_ERROR_CHECK(rtc_gpio_pulldown_dis(CONFIG_GPIO_SDA));    
+    ESP_ERROR_CHECK(rtc_gpio_set_direction(CONFIG_GPIO_SDA, RTC_GPIO_MODE_INPUT_OUTPUT_OD));
+    ESP_ERROR_CHECK(rtc_gpio_set_level(CONFIG_GPIO_SDA, 0));
 
-        .pin_bit_mask = (1 << CONFIG_GPIO_SDA) | (1 << CONFIG_GPIO_SCL),
-        .pull_up_en = GPIO_PULLUP_ENABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_INPUT_OUTPUT_OD
+    esp_rom_delay_us(100);
 
-    };
-    gpio_config(&config);
+    TEST_ASSERT_MESSAGE(rtc_gpio_set_level(CONFIG_GPIO_SDA, 1) == ESP_OK, "GPIO Couldn't Set the Level of the SDA");
+    TEST_ASSERT_MESSAGE(rtc_gpio_set_level(CONFIG_GPIO_SCL, 1) == ESP_OK, "GPIO Couldn't Set the Level of the SCL");
 
-    TEST_ASSERT_MESSAGE(gpio_set_level(CONFIG_GPIO_SDA, 1) == ESP_OK, "GPIO Couldn't Set the Level of the SDA");
-    TEST_ASSERT_MESSAGE(gpio_set_level(CONFIG_GPIO_SCL, 1) == ESP_OK, "GPIO Couldn't Set the Level of the SCL");
+    esp_rom_delay_us(100);
 
-    esp_rom_delay_us(1000);
-
-    TEST_ASSERT_MESSAGE(gpio_get_level(CONFIG_GPIO_SDA) == 1, "SDA Was Low When it Should Have been High");
-    TEST_ASSERT_MESSAGE(gpio_get_level(CONFIG_GPIO_SCL) == 1, "SCL Was Low When it Should Have been High");
+    TEST_ASSERT_MESSAGE(rtc_gpio_get_level(CONFIG_GPIO_SDA) == 1, "SDA Was Low When it Should Have been High");
+    TEST_ASSERT_MESSAGE(rtc_gpio_get_level(CONFIG_GPIO_SCL) == 1, "SCL Was Low When it Should Have been High");
+    
+    esp_rom_delay_us(100);
 
 }
 
 void gpio_deinit() {
 
-    gpio_reset_pin(CONFIG_GPIO_SDA);
+    rtc_gpio_deinit(CONFIG_GPIO_SCL);
+    rtc_gpio_deinit(CONFIG_GPIO_SDA);
+
     gpio_reset_pin(CONFIG_GPIO_SCL);
+    gpio_reset_pin(CONFIG_GPIO_SDA);
 
 }
 
-static bool read_sda() { return (bool)gpio_get_level(CONFIG_GPIO_SDA); }
-static bool read_scl() { return (bool)gpio_get_level(CONFIG_GPIO_SCL); }
-static void write_sda(const bool state) { gpio_set_level(CONFIG_GPIO_SDA, state); }
-static void write_scl(const bool state) { gpio_set_level(CONFIG_GPIO_SCL, state); }
+static bool read_sda() { return (bool)rtc_gpio_get_level(CONFIG_GPIO_SDA); }
+static bool read_scl() { return (bool)rtc_gpio_get_level(CONFIG_GPIO_SCL); }
+static void write_sda(const bool state) { rtc_gpio_set_level(CONFIG_GPIO_SDA, state); }
+static void write_scl(const bool state) { rtc_gpio_set_level(CONFIG_GPIO_SCL, state); }
 static void delay_us(const uint16_t us) { esp_rom_delay_us(us); }
 
 void i2c_init(SWI2CMaster* const master) {

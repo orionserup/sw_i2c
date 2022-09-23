@@ -132,11 +132,7 @@ SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* co
     if(freq == 0)
         return NULL;
 
-    master->config.delay = config->delay;
-    master->config.scl_read = config->scl_read;
-    master->config.sda_read = config->sda_read;
-    master->config.sda_write = config->sda_write;
-    master->config.scl_write = config->scl_write;
+    master->config = *config;
 
     master->frequency = freq;    
     float period = 1.0f / (float)freq;

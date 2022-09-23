@@ -11,8 +11,6 @@
 
 #include "../include/sw_i2c_master.h"
 
-#include <string.h>
-
 void sw_i2c_start(SWI2CMaster* const device) {
     
     device->started = true;   
@@ -134,7 +132,12 @@ SWI2CMaster* sw_i2c_master_init(SWI2CMaster* const master, const SWI2CConfig* co
     if(freq == 0)
         return NULL;
 
-    memcpy(&master->config, config, sizeof(SWI2CConfig));
+    master->config.delay = config->delay;
+    master->config.scl_read = config->scl_read;
+    master->config.sda_read = config->sda_read;
+    master->config.sda_write = config->sda_write;
+    master->config.scl_write = config->scl_write;
+
     master->frequency = freq;    
     float period = 1.0f / (float)freq;
     master->period_us = (uint16_t)(100000.0f * period); 
@@ -152,7 +155,11 @@ void sw_i2c_master_deinit(SWI2CMaster* const master) {
     if(master->started)
         sw_i2c_stop(master);
     
-    memset(master, 0, sizeof(SWI2CMaster));
+    master->config.delay = NULL;
+    master->config.scl_read = NULL;
+    master->config.sda_read = NULL;
+    master->config.scl_write = NULL;
+    master->config.sda_write = NULL;
 
 }
 
